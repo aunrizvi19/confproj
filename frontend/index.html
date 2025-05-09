@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Traffic Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gray-100 p-6 text-gray-800 transition duration-500">
+
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-3xl font-bold">🚦 Smart Traffic Dashboard</h1>
+    <button id="dark-mode-toggle" class="text-sm bg-black text-white py-1 px-3 rounded">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- Legends and Controls -->
+  <div class="flex justify-between items-center mb-6">
+    <div class="flex space-x-4 items-center">
+      <div class="flex items-center space-x-1">
+        <div class="w-4 h-4 bg-green-600 rounded-full"></div>
+        <span class="text-sm">Green (Go)</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <div class="w-4 h-4 bg-red-600 rounded-full"></div>
+        <span class="text-sm">Red (Wait)</span>
+      </div>
+    </div>
+
+    <div class="flex space-x-3">
+      <button id="refresh-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+        🔄 Refresh Traffic
+      </button>
+      <button id="auto-refresh-toggle" class="bg-gray-300 hover:bg-gray-400 text-black font-semibold py-2 px-4 rounded">
+        ▶️ Auto-Refresh: Off
+      </button>
+    </div>
+  </div>
+
+  <!-- Total Vehicles -->
+  <div class="text-center text-lg font-semibold mb-4">
+    Total Vehicles: <span id="total-count">0</span>
+  </div>
+
+  <!-- Traffic Cards -->
+  <div id="traffic-container" class="space-y-4 max-w-2xl mx-auto"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
