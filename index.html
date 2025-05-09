@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Traffic Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#1a1a1a',
+              card: '#2d2d2d',
+              text: '#e5e5e5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-dark-bg text-gray-800 dark:text-dark-text transition duration-500 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white dark:bg-dark-card shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <h1 class="text-2xl font-bold">🚦 Smart Traffic</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="dark-mode-toggle" class="text-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 py-2 px-4 rounded-lg transition duration-300 hover:bg-gray-700 dark:hover:bg-gray-300">
+            <span class="dark:hidden">🌙 Dark Mode</span>
+            <span class="hidden dark:inline">☀️ Light Mode</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Main Dashboard -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column: Traffic Control -->
+      <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6 mb-8">
+          <h2 class="text-2xl font-bold mb-6">Traffic Control Dashboard</h2>
+          
+          <!-- Legends and Controls -->
+          <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <div class="flex space-x-4 items-center">
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 bg-green-600 rounded-full"></div>
+                <span class="text-sm">Green (Go)</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 bg-red-600 rounded-full"></div>
+                <span class="text-sm">Red (Wait)</span>
+              </div>
+            </div>
+
+            <div class="flex space-x-3">
+              <button id="refresh-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                🔄 Refresh Traffic
+              </button>
+              <button id="auto-refresh-toggle" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                ▶️ Auto-Refresh: Off
+              </button>
+            </div>
+          </div>
+
+          <!-- Total Vehicles -->
+          <div class="text-center text-xl font-semibold mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            Total Vehicles: <span id="total-count" class="text-blue-600 dark:text-blue-400">0</span>
+          </div>
+
+          <!-- Traffic Cards -->
+          <div id="traffic-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Traffic Information -->
+      <div class="space-y-8">
+        <!-- Traffic Statistics -->
+        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold mb-4">Traffic Statistics</h2>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span>Average Wait Time</span>
+              <span class="font-semibold" id="avg-wait-time">0 min</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span>Peak Hour Traffic</span>
+              <span class="font-semibold" id="peak-traffic">0 vehicles</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span>Traffic Flow Rate</span>
+              <span class="font-semibold" id="flow-rate">0 vehicles/min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Traffic Alerts -->
+        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold mb-4">Traffic Alerts</h2>
+          <div id="alerts-container" class="space-y-3">
+            <!-- Alerts will be dynamically added here -->
+          </div>
+        </div>
+
+        <!-- Traffic Trends -->
+        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold mb-4">Traffic Trends</h2>
+          <canvas id="traffic-trends-chart" class="w-full h-48"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
