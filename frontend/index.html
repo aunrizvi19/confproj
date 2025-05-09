@@ -2,11 +2,23 @@
 <html>
 <head>
   <title>Smart Traffic Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <h1>Traffic Dashboard</h1>
-  <div id="traffic-container"></div>
+<body class="bg-gray-100 p-6">
+  <h1 class="text-3xl font-bold text-center mb-6">Smart Traffic Dashboard 🚦</h1>
+
+  <!-- Refresh Button -->
+  <div class="flex justify-center mb-6">
+    <button id="refresh-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+      🔄 Refresh Traffic Data
+    </button>
+  </div>
+
+  <!-- Traffic Cards -->
+  <div id="traffic-container" class="space-y-4 max-w-2xl mx-auto"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
+
