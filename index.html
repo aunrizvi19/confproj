@@ -4,7 +4,6 @@
   <title>Smart Traffic Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -79,6 +78,43 @@
           <!-- Traffic Cards -->
           <div id="traffic-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
+
+        <!-- Smart Parking Section -->
+        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold mb-6">Smart Parking System</h2>
+          
+          <!-- Parking Overview -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+              <h3 class="text-lg font-semibold mb-2">Total Spots</h3>
+              <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="total-spots">100</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+              <h3 class="text-lg font-semibold mb-2">Available</h3>
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400" id="available-spots">75</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+              <h3 class="text-lg font-semibold mb-2">Occupancy Rate</h3>
+              <p class="text-2xl font-bold text-orange-600 dark:text-orange-400" id="occupancy-rate">25%</p>
+            </div>
+          </div>
+
+          <!-- Parking Zones -->
+          <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-4">Parking Zones</h3>
+            <div id="parking-zones" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Parking zones will be dynamically added here -->
+            </div>
+          </div>
+
+          <!-- Parking Guidance -->
+          <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4">Parking Guidance</h3>
+            <div id="parking-guidance" class="space-y-3">
+              <!-- Parking guidance will be dynamically added here -->
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Right Column: Traffic Information -->
@@ -108,12 +144,6 @@
           <div id="alerts-container" class="space-y-3">
             <!-- Alerts will be dynamically added here -->
           </div>
-        </div>
-
-        <!-- Traffic Trends -->
-        <div class="bg-white dark:bg-dark-card rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-bold mb-4">Traffic Trends</h2>
-          <canvas id="traffic-trends-chart" class="w-full h-48"></canvas>
         </div>
       </div>
     </div>

@@ -6,22 +6,24 @@ let trafficData = [
 
 let autoRefresh = false;
 let intervalId = null;
-let trafficHistory = [];
-let trafficChart = null;
 
-// Initialize traffic history with some sample data
-for (let i = 0; i < 24; i++) {
-  trafficHistory.push({
-    hour: i,
-    vehicles: Math.floor(Math.random() * 100)
-  });
-}
+// Parking system data
+let parkingData = {
+  zones: [
+    { id: "P1", name: "Zone A", totalSpots: 30, availableSpots: 15, rate: "$2/hour" },
+    { id: "P2", name: "Zone B", totalSpots: 40, availableSpots: 25, rate: "$3/hour" },
+    { id: "P3", name: "Zone C", totalSpots: 20, availableSpots: 5, rate: "$4/hour" },
+    { id: "P4", name: "Zone D", totalSpots: 25, availableSpots: 20, rate: "$2.50/hour" }
+  ],
+  totalSpots: 115,
+  availableSpots: 65
+};
 
 function calculateTrafficStats() {
   const totalVehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
-  const avgWaitTime = Math.round((totalVehicles / 3) * 0.5); // Simple calculation
-  const peakTraffic = Math.max(...trafficHistory.map(h => h.vehicles));
-  const flowRate = Math.round(totalVehicles / 5); // Simple calculation
+  const avgWaitTime = Math.round((totalVehicles / 3) * 0.5);
+  const peakTraffic = Math.max(...trafficData.map(road => road.vehicles));
+  const flowRate = Math.round(totalVehicles / 5);
 
   document.getElementById("avg-wait-time").textContent = `${avgWaitTime} min`;
   document.getElementById("peak-traffic").textContent = `${peakTraffic} vehicles`;
@@ -32,14 +34,12 @@ function updateTrafficAlerts() {
   const alertsContainer = document.getElementById("alerts-container");
   alertsContainer.innerHTML = "";
 
-  // Check for high traffic conditions
   trafficData.forEach(road => {
     if (road.vehicles > 70) {
       addAlert(`High traffic on Road ${road.road}`, "warning");
     }
   });
 
-  // Check for traffic flow issues
   const totalVehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
   if (totalVehicles > 150) {
     addAlert("Heavy traffic across all roads", "error");
@@ -65,57 +65,109 @@ function addAlert(message, type) {
   alertsContainer.appendChild(alert);
 }
 
-function updateTrafficChart() {
-  const ctx = document.getElementById("traffic-trends-chart").getContext("2d");
-  
-  if (trafficChart) {
-    trafficChart.destroy();
-  }
-
-  trafficChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: trafficHistory.map(h => `${h.hour}:00`),
-      datasets: [{
-        label: "Traffic Volume",
-        data: trafficHistory.map(h => h.vehicles),
-        borderColor: "#4CAF50",
-        backgroundColor: "rgba(76, 175, 80, 0.1)",
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: "rgba(0, 0, 0, 0.1)"
-          }
-        },
-        x: {
-          grid: {
-            display: false
-          }
-        }
-      }
-    }
-  });
-}
-
 function assignGreenTimes() {
   const totalVehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
   trafficData.forEach(road => {
     road.green_time = totalVehicles ? Math.round((road.vehicles / totalVehicles) * 120) : 0;
   });
   document.getElementById("total-count").textContent = totalVehicles;
+}
+
+function updateParkingStats() {
+  // Update total and available spots
+  document.getElementById("total-spots").textContent = parkingData.totalSpots;
+  document.getElementById("available-spots").textContent = parkingData.availableSpots;
+  
+  // Calculate and update occupancy rate
+  const occupancyRate = ((parkingData.totalSpots - parkingData.availableSpots) / parkingData.totalSpots * 100).toFixed(1);
+  document.getElementById("occupancy-rate").textContent = `${occupancyRate}%`;
+
+  // Update parking zones display
+  const zonesContainer = document.getElementById("parking-zones");
+  zonesContainer.innerHTML = "";
+
+  parkingData.zones.forEach(zone => {
+    const occupancy = ((zone.totalSpots - zone.availableSpots) / zone.totalSpots * 100).toFixed(1);
+    const statusColor = occupancy > 80 ? "text-red-600 dark:text-red-400" :
+                       occupancy > 50 ? "text-orange-600 dark:text-orange-400" :
+                       "text-green-600 dark:text-green-400";
+
+    const zoneCard = document.createElement("div");
+    zoneCard.className = "bg-white dark:bg-dark-card p-4 rounded-lg shadow-md";
+    zoneCard.innerHTML = `
+      <div class="flex justify-between items-center mb-2">
+        <h4 class="font-semibold">${zone.name}</h4>
+        <span class="text-sm ${statusColor}">${occupancy}% Full</span>
+      </div>
+      <div class="flex justify-between text-sm text-gray-600 dark:text-gray-300">
+        <span>Available: ${zone.availableSpots}/${zone.totalSpots}</span>
+        <span>Rate: ${zone.rate}</span>
+      </div>
+      <div class="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+        <div class="h-full rounded-full ${occupancy > 80 ? 'bg-red-500' : occupancy > 50 ? 'bg-orange-500' : 'bg-green-500'}"
+             style="width: ${occupancy}%"></div>
+      </div>
+    `;
+    zonesContainer.appendChild(zoneCard);
+  });
+
+  // Update parking guidance
+  updateParkingGuidance();
+}
+
+function updateParkingGuidance() {
+  const guidanceContainer = document.getElementById("parking-guidance");
+  guidanceContainer.innerHTML = "";
+
+  // Find the zone with the most available spots
+  const bestZone = parkingData.zones.reduce((a, b) => 
+    (b.availableSpots / b.totalSpots) > (a.availableSpots / a.totalSpots) ? b : a
+  );
+
+  // Add guidance messages
+  if (bestZone.availableSpots > 0) {
+    addGuidanceMessage(`Best parking option: ${bestZone.name} (${bestZone.availableSpots} spots available)`, "success");
+  }
+
+  // Check for zones that are almost full
+  parkingData.zones.forEach(zone => {
+    const occupancy = (zone.totalSpots - zone.availableSpots) / zone.totalSpots;
+    if (occupancy > 0.9) {
+      addGuidanceMessage(`${zone.name} is almost full (${zone.availableSpots} spots left)`, "warning");
+    }
+  });
+
+  // Check overall parking availability
+  const totalOccupancy = (parkingData.totalSpots - parkingData.availableSpots) / parkingData.totalSpots;
+  if (totalOccupancy > 0.8) {
+    addGuidanceMessage("Overall parking is limited. Consider alternative transportation.", "warning");
+  }
+}
+
+function addGuidanceMessage(message, type) {
+  const guidanceContainer = document.getElementById("parking-guidance");
+  const messageDiv = document.createElement("div");
+  
+  const bgColor = type === "warning" ? "bg-yellow-100 dark:bg-yellow-900" : "bg-green-100 dark:bg-green-900";
+  const textColor = type === "warning" ? "text-yellow-800 dark:text-yellow-200" : "text-green-800 dark:text-green-200";
+
+  messageDiv.className = `p-3 rounded-lg ${bgColor} ${textColor} text-sm`;
+  messageDiv.textContent = message;
+  guidanceContainer.appendChild(messageDiv);
+}
+
+function simulateParkingChanges() {
+  // Randomly change parking availability
+  parkingData.zones.forEach(zone => {
+    const change = Math.random() > 0.5 ? 1 : -1;
+    const newSpots = Math.max(0, Math.min(zone.totalSpots, zone.availableSpots + change));
+    zone.availableSpots = newSpots;
+  });
+
+  // Update total available spots
+  parkingData.availableSpots = parkingData.zones.reduce((sum, zone) => sum + zone.availableSpots, 0);
+  
+  updateParkingStats();
 }
 
 function updateUI() {
@@ -152,10 +204,9 @@ function updateUI() {
     container.appendChild(card);
   });
 
-  // Update additional information
   calculateTrafficStats();
   updateTrafficAlerts();
-  updateTrafficChart();
+  updateParkingStats();
 }
 
 function updateVehicle(roadName, value) {
@@ -169,9 +220,6 @@ document.getElementById("refresh-btn").addEventListener("click", () => {
   trafficData.forEach(road => {
     road.vehicles = Math.floor(Math.random() * 100);
   });
-  // Update traffic history
-  const currentHour = new Date().getHours();
-  trafficHistory[currentHour].vehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
   updateUI();
 });
 
@@ -185,9 +233,7 @@ document.getElementById("auto-refresh-toggle").addEventListener("click", () => {
       trafficData.forEach(road => {
         road.vehicles = Math.floor(Math.random() * 100);
       });
-      // Update traffic history
-      const currentHour = new Date().getHours();
-      trafficHistory[currentHour].vehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
+      simulateParkingChanges();
       updateUI();
     }, 3000);
   } else {
@@ -198,13 +244,6 @@ document.getElementById("auto-refresh-toggle").addEventListener("click", () => {
 document.getElementById("dark-mode-toggle").addEventListener("click", () => {
   document.documentElement.classList.toggle('dark');
   localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-  // Update chart colors for dark mode
-  if (trafficChart) {
-    trafficChart.options.scales.y.grid.color = document.documentElement.classList.contains('dark') 
-      ? "rgba(255, 255, 255, 0.1)" 
-      : "rgba(0, 0, 0, 0.1)";
-    trafficChart.update();
-  }
 });
 
 // Check for saved dark mode preference
