@@ -1,7 +1,11 @@
+// API Configuration
+const API_BASE_URL = 'http://localhost:5000'; // Update this with your actual API base URL
+
+// Traffic and Parking Data
 let trafficData = [
-  { road: "A", vehicles: 30 },
-  { road: "B", vehicles: 60 },
-  { road: "C", vehicles: 10 }
+  { road: "A", vehicles: 0 },
+  { road: "B", vehicles: 0 },
+  { road: "C", vehicles: 0 }
 ];
 
 let autoRefresh = false;
@@ -10,14 +14,72 @@ let intervalId = null;
 // Parking system data
 let parkingData = {
   zones: [
-    { id: "P1", name: "Zone A", totalSpots: 30, availableSpots: 15, rate: "$2/hour" },
-    { id: "P2", name: "Zone B", totalSpots: 40, availableSpots: 25, rate: "$3/hour" },
-    { id: "P3", name: "Zone C", totalSpots: 20, availableSpots: 5, rate: "$4/hour" },
-    { id: "P4", name: "Zone D", totalSpots: 25, availableSpots: 20, rate: "$2.50/hour" }
+    { id: "P1", name: "Zone A", totalSpots: 30, availableSpots: 15, rate: "₹20/hour" },
+    { id: "P2", name: "Zone B", totalSpots: 40, availableSpots: 25, rate: "₹30/hour" },
+    { id: "P3", name: "Zone C", totalSpots: 20, availableSpots: 5, rate: "₹40/hour" },
+    { id: "P4", name: "Zone D", totalSpots: 25, availableSpots: 20, rate: "₹25/hour" }
   ],
   totalSpots: 115,
   availableSpots: 65
 };
+
+// API Integration Functions
+async function fetchTrafficData() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/traffic`);
+    const data = await response.json();
+    
+    // Update traffic data based on API response
+    trafficData = data.map(road => ({
+      road: road.id,
+      vehicles: road.vehicleCount
+    }));
+    
+    return true;
+  } catch (error) {
+    console.error('Error fetching traffic data:', error);
+    addAlert('Failed to fetch traffic data', 'error');
+    return false;
+  }
+}
+
+async function updateParkingFromTraffic() {
+  try {
+    // Calculate parking demand based on traffic data
+    const totalVehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
+    
+    // Update parking availability based on traffic
+    parkingData.zones.forEach(zone => {
+      // Calculate parking demand for this zone (example logic)
+      const demandFactor = Math.random() * 0.3; // Random factor between 0-0.3
+      const parkingDemand = Math.floor(totalVehicles * demandFactor);
+      
+      // Update available spots
+      const newAvailableSpots = Math.max(0, Math.min(zone.totalSpots, 
+        zone.totalSpots - parkingDemand));
+      
+      zone.availableSpots = newAvailableSpots;
+    });
+
+    // Update total available spots
+    parkingData.availableSpots = parkingData.zones.reduce(
+      (sum, zone) => sum + zone.availableSpots, 0
+    );
+
+    // Optional: Send parking data to backend
+    await fetch(`${API_BASE_URL}/api/parking`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(parkingData)
+    });
+
+  } catch (error) {
+    console.error('Error updating parking data:', error);
+    addAlert('Failed to update parking data', 'error');
+  }
+}
 
 function calculateTrafficStats() {
   const totalVehicles = trafficData.reduce((sum, road) => sum + road.vehicles, 0);
@@ -170,43 +232,55 @@ function simulateParkingChanges() {
   updateParkingStats();
 }
 
-function updateUI() {
-  assignGreenTimes();
-  const container = document.getElementById("traffic-container");
-  container.innerHTML = "";
+async function updateUI() {
+  try {
+    // Fetch latest traffic data
+    await fetchTrafficData();
+    
+    // Update parking based on traffic
+    await updateParkingFromTraffic();
+    
+    // Update UI components
+    assignGreenTimes();
+    const container = document.getElementById("traffic-container");
+    container.innerHTML = "";
 
-  const maxRoad = trafficData.reduce((a, b) => a.vehicles > b.vehicles ? a : b);
+    const maxRoad = trafficData.reduce((a, b) => a.vehicles > b.vehicles ? a : b);
 
-  trafficData.forEach(road => {
-    const lightColor = road.road === maxRoad.road ? "green" : "red";
-    const barWidth = Math.min(road.green_time * 2, 240);
+    trafficData.forEach(road => {
+      const lightColor = road.road === maxRoad.road ? "green" : "red";
+      const barWidth = Math.min(road.green_time * 2, 240);
 
-    const card = document.createElement("div");
-    card.className = `bg-white dark:bg-dark-card p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg ${
-      road.road === maxRoad.road ? "ring-2 ring-green-500 dark:ring-green-400" : ""
-    }`;
+      const card = document.createElement("div");
+      card.className = `bg-white dark:bg-dark-card p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg ${
+        road.road === maxRoad.road ? "ring-2 ring-green-500 dark:ring-green-400" : ""
+      }`;
 
-    card.innerHTML = `
-      <h2 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">🛣️ Road ${road.road}</h2>
-      <p class="mb-2 text-gray-600 dark:text-gray-300">🚗 Vehicles: <span id="vehicle-count-${road.road}" class="font-semibold">${road.vehicles}</span></p>
-      <input type="range" min="0" max="100" value="${road.vehicles}"
-        oninput="updateVehicle('${road.road}', this.value)" class="w-full mb-3">
-      <p class="mb-2 text-gray-600 dark:text-gray-300">🟢 Green Time: <span class="font-semibold">${road.green_time} seconds</span></p>
-      <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full mb-3">
-        <div class="h-full bg-green-500 dark:bg-green-400 rounded-full transition-all duration-300" style="width: ${barWidth}px;"></div>
-      </div>
-      <div class="flex items-center justify-between">
-        <div class="w-5 h-5 rounded-full ${lightColor === 'green' ? 'bg-green-600 dark:bg-green-400' : 'bg-red-600 dark:bg-red-400'}"></div>
-        <span class="text-sm text-gray-500 dark:text-gray-400">${lightColor === 'green' ? 'Active' : 'Waiting'}</span>
-      </div>
-    `;
+      card.innerHTML = `
+        <h2 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">🛣️ Road ${road.road}</h2>
+        <p class="mb-2 text-gray-600 dark:text-gray-300">🚗 Vehicles: <span id="vehicle-count-${road.road}" class="font-semibold">${road.vehicles}</span></p>
+        <input type="range" min="0" max="100" value="${road.vehicles}"
+          oninput="updateVehicle('${road.road}', this.value)" class="w-full mb-3">
+        <p class="mb-2 text-gray-600 dark:text-gray-300">🟢 Green Time: <span class="font-semibold">${road.green_time} seconds</span></p>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full mb-3">
+          <div class="h-full bg-green-500 dark:bg-green-400 rounded-full transition-all duration-300" style="width: ${barWidth}px;"></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="w-5 h-5 rounded-full ${lightColor === 'green' ? 'bg-green-600 dark:bg-green-400' : 'bg-red-600 dark:bg-red-400'}"></div>
+          <span class="text-sm text-gray-500 dark:text-gray-400">${lightColor === 'green' ? 'Active' : 'Waiting'}</span>
+        </div>
+      `;
 
-    container.appendChild(card);
-  });
+      container.appendChild(card);
+    });
 
-  calculateTrafficStats();
-  updateTrafficAlerts();
-  updateParkingStats();
+    calculateTrafficStats();
+    updateTrafficAlerts();
+    updateParkingStats();
+  } catch (error) {
+    console.error('Error updating UI:', error);
+    addAlert('Failed to update UI', 'error');
+  }
 }
 
 function updateVehicle(roadName, value) {
@@ -216,11 +290,8 @@ function updateVehicle(roadName, value) {
   updateUI();
 }
 
-document.getElementById("refresh-btn").addEventListener("click", () => {
-  trafficData.forEach(road => {
-    road.vehicles = Math.floor(Math.random() * 100);
-  });
-  updateUI();
+document.getElementById("refresh-btn").addEventListener("click", async () => {
+  await updateUI();
 });
 
 document.getElementById("auto-refresh-toggle").addEventListener("click", () => {
@@ -229,12 +300,8 @@ document.getElementById("auto-refresh-toggle").addEventListener("click", () => {
   btn.textContent = autoRefresh ? "⏸️ Auto-Refresh: On" : "▶️ Auto-Refresh: Off";
 
   if (autoRefresh) {
-    intervalId = setInterval(() => {
-      trafficData.forEach(road => {
-        road.vehicles = Math.floor(Math.random() * 100);
-      });
-      simulateParkingChanges();
-      updateUI();
+    intervalId = setInterval(async () => {
+      await updateUI();
     }, 3000);
   } else {
     clearInterval(intervalId);
