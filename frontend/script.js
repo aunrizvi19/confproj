@@ -83,4 +83,3 @@ document.getElementById("dark-mode-toggle").addEventListener("click", () => {
 
 // Initial render
 updateUI();
-
